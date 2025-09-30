@@ -1,8 +1,10 @@
 package com.example.university.entity;
 
+import com.example.university.dto.StudentUpdateRequest;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.springframework.web.bind.annotation.PatchMapping;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,12 +44,11 @@ public class Student {
     //N:1 관계의 주인
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "dept_id", nullable = false)
-    @JsonIgnore
     private Department department;
 
     //1:N 관계 (Enrollment 쪽이 주인)
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonIgnore
+   /* @JsonIgnore*/
     private List<Enrollment> enrollments = new ArrayList<>();
 
     @Builder
@@ -57,4 +58,21 @@ public class Student {
         this.department = department;
         this.grade = grade;
     }
+
+    public void updateDetails(StudentUpdateRequest request, Department department){
+
+        if(request.getName() != null){
+            this.name = request.getName();
+        }
+
+        if(request.getGrade() != null){
+            this.grade = request.getGrade();
+        }
+
+        if(department != null){
+            this.department = department;
+        }
+
+    }
+
 }
