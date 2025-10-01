@@ -2,6 +2,7 @@ package com.example.university.service;
 
 import com.example.university.dto.StudentRegistrationRequest;
 import com.example.university.dto.StudentResponse;
+import com.example.university.dto.StudentSearchRequest;
 import com.example.university.dto.StudentUpdateRequest;
 import com.example.university.entity.Student;
 
@@ -15,4 +16,6 @@ public interface StudentService {
     List<StudentResponse> findAllStudents();
 
     void updateStudentDetails(Long id, StudentUpdateRequest request);
+
+    List<StudentResponse> searchStudents(StudentSearchRequest request);
 }

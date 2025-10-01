@@ -6,6 +6,7 @@ import com.example.university.common.utils.MetaData;
 import com.example.university.common.validation.ValidationGroups;
 import com.example.university.dto.StudentRegistrationRequest;
 import com.example.university.dto.StudentResponse;
+import com.example.university.dto.StudentSearchRequest;
 import com.example.university.dto.StudentUpdateRequest;
 import com.example.university.entity.Student;
 import com.example.university.service.StudentService;
@@ -75,7 +76,6 @@ public class StudentController {
      * @throws EntityNotFoundException
      * @return id
      */
-
     @PatchMapping("/{id}")
     public ResponseEntity<BaseResponse> updateStudentDetails(@PathVariable Long id, @RequestBody StudentUpdateRequest request){
 
@@ -83,6 +83,22 @@ public class StudentController {
 
         return ResponseEntity.ok(new CommonResponse<>(MetaData.builder().result(true).code("200").message("수정 완료").build(), id));
     }
+
+    /**
+     * GET /api/students/search
+     * @param StudentSearchRequest
+     * @throws EntityNotFoundException
+     * @return list
+     */
+    @GetMapping("/search")
+    public ResponseEntity<BaseResponse> searchStudents(@RequestBody StudentSearchRequest request){
+
+        List<StudentResponse> stuents = studentService.searchStudents(request);
+
+        return ResponseEntity.ok(new CommonResponse<>(MetaData.builder().result(true).code("200").message("조회 완료").build(), stuents));
+
+    }
+
 
 
 

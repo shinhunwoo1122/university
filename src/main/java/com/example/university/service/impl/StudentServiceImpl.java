@@ -2,6 +2,7 @@ package com.example.university.service.impl;
 
 import com.example.university.dto.StudentRegistrationRequest;
 import com.example.university.dto.StudentResponse;
+import com.example.university.dto.StudentSearchRequest;
 import com.example.university.dto.StudentUpdateRequest;
 import com.example.university.entity.Department;
 import com.example.university.entity.Student;
@@ -77,5 +78,13 @@ public class StudentServiceImpl implements StudentService {
             // 4. save() 호출 없이, 트랜잭션 커밋 시 변경된 필드만 UPDATE
             log.info("Student ID {} details updated via Dirty Checking.", id);
         }
+    }
+
+    @Override
+    public List<StudentResponse> searchStudents(StudentSearchRequest request) {
+
+        List<Student> students = studentRepository.searchStudentDynamic(request);
+
+        return students.stream().map(StudentResponse::of).collect(Collectors.toList());
     }
 }
