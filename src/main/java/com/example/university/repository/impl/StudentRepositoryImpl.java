@@ -10,6 +10,9 @@ import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
@@ -25,17 +28,32 @@ public class StudentRepositoryImpl implements StudentRepositoryCustom {
     private final QDepartment department = QDepartment.department;
 
     @Override
-    public List<Student> searchStudentDynamic(StudentSearchRequest request) {
+    public Page<Student> searchStudentDynamic(StudentSearchRequest request, Pageable pageable) {
 
         BooleanBuilder builder = new BooleanBuilder();
         searchCheck(request, builder);
 
-        return queryFactory
+        // 1. Querydsl 쿼리 실행
+        List<Student> content =  queryFactory
                 .selectFrom(student)
                 .join(student.department, department)
                 .fetchJoin()
                 .where(builder)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                // .orderBy(getSorts(pageable.getSort())) // 정렬 적용 로직 필요
                 .fetch();
+
+        Long total = queryFactory
+                .select(student.count())
+                .from(student)
+                .where(builder)
+                .fetchOne();
+
+        // Null 체크 후 0으로 처리 (혹시 모를 오류 방지)
+        long totalCount =  total != null ? total : 0;
+
+        return new PageImpl<>(content, pageable, totalCount);
     }
 
     private void searchCheck(StudentSearchRequest request, BooleanBuilder builder) {
@@ -52,4 +70,5 @@ public class StudentRepositoryImpl implements StudentRepositoryCustom {
             builder.and(student.department.name.eq(request.getDepartmentName()));
         }
     }
+
 }

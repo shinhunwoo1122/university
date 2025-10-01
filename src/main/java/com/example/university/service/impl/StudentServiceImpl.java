@@ -4,6 +4,7 @@ import com.example.university.dto.StudentRegistrationRequest;
 import com.example.university.dto.StudentResponse;
 import com.example.university.dto.StudentSearchRequest;
 import com.example.university.dto.StudentUpdateRequest;
+import com.example.university.dto.common.PageResponse;
 import com.example.university.entity.Department;
 import com.example.university.entity.Student;
 import com.example.university.repository.DepartmentRepository;
@@ -13,6 +14,8 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -81,10 +84,14 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
-    public List<StudentResponse> searchStudents(StudentSearchRequest request) {
+    public PageResponse<StudentResponse> searchStudents(StudentSearchRequest request, Pageable pageable) {
 
-        List<Student> students = studentRepository.searchStudentDynamic(request);
+        Page<Student> students = studentRepository.searchStudentDynamic(request, pageable);
 
-        return students.stream().map(StudentResponse::of).collect(Collectors.toList());
+        Page<StudentResponse> dtoPage = students.map(StudentResponse::of);
+
+        return PageResponse.of(dtoPage);
     }
+
+
 }

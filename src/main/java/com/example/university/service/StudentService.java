@@ -4,7 +4,9 @@ import com.example.university.dto.StudentRegistrationRequest;
 import com.example.university.dto.StudentResponse;
 import com.example.university.dto.StudentSearchRequest;
 import com.example.university.dto.StudentUpdateRequest;
+import com.example.university.dto.common.PageResponse;
 import com.example.university.entity.Student;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -17,5 +19,7 @@ public interface StudentService {
 
     void updateStudentDetails(Long id, StudentUpdateRequest request);
 
-    List<StudentResponse> searchStudents(StudentSearchRequest request);
+    PageResponse<StudentResponse> searchStudents(StudentSearchRequest request, Pageable pageable);
+
+
 }

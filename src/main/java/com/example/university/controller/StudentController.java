@@ -8,10 +8,14 @@ import com.example.university.dto.StudentRegistrationRequest;
 import com.example.university.dto.StudentResponse;
 import com.example.university.dto.StudentSearchRequest;
 import com.example.university.dto.StudentUpdateRequest;
+import com.example.university.dto.common.PageResponse;
 import com.example.university.entity.Student;
 import com.example.university.service.StudentService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -91,9 +95,11 @@ public class StudentController {
      * @return list
      */
     @GetMapping("/search")
-    public ResponseEntity<BaseResponse> searchStudents(@RequestBody StudentSearchRequest request){
+    public ResponseEntity<BaseResponse> searchStudents(@RequestBody StudentSearchRequest request,
+                                                       @PageableDefault(size = 3, sort = "id", direction = Sort.Direction.DESC)
+                                                       Pageable pageable){
 
-        List<StudentResponse> stuents = studentService.searchStudents(request);
+        PageResponse<StudentResponse> stuents = studentService.searchStudents(request, pageable);
 
         return ResponseEntity.ok(new CommonResponse<>(MetaData.builder().result(true).code("200").message("조회 완료").build(), stuents));
 
