@@ -102,7 +102,6 @@ public class StudentController {
         PageResponse<StudentResponse> stuents = studentService.searchStudents(request, pageable);
 
         return ResponseEntity.ok(new CommonResponse<>(MetaData.builder().result(true).code("200").message("조회 완료").build(), stuents));
-
     }
 
 
