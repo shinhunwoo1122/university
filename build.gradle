@@ -58,6 +58,10 @@ tasks.named('compileJava') {
     dependsOn tasks.named('processResources')
 }
 
+tasks.named('bootJar'){
+    archiveFileName = "app.jar"
+}
+
 tasks.named('test') {
 	useJUnitPlatform()
 }

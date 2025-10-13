@@ -1,0 +1,41 @@
+# docker-compose.yml
+
+version: '3.8'
+services:
+  # 1. Spring Boot 애플리케이션 서비스 (app)
+  app:
+    build: .                 # 현재 디렉토리의 Dockerfile을 사용해 이미지 빌드
+    container_name: my-spring-app
+    ports:
+      - "8080:8080"          # Windows 호스트 포트 -> 컨테이너 포트 연결
+    depends_on:
+      db:
+        condition: service_healthy # DB가 먼저 시작되기를 기다립니다.
+    environment:
+      # 🚨 application.yml의 ${} 변수에 주입할 실제 값
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/university?useUnicode=true&characterEncoding=utf8  # 'db'는 MySQL 서비스 이름
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: aa456456!
+
+  # 2. MySQL 데이터베이스 서비스 (db)
+  db:
+    image: mysql:8.0         # MySQL 8.0 공식 이미지 사용
+    container_name: mysql-db
+    ports:
+      - "3307:3306"          # 로컬 DB 툴 접속용 포트 (선택 사항)
+    environment:
+      MYSQL_DATABASE: university
+      #MYSQL_USER: root
+      #MYSQL_PASSWORD: aa456456!
+      MYSQL_ROOT_PASSWORD: aa456456!
+    # 컨테이너 삭제 시에도 데이터 유실 방지를 위한 볼륨 설정
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$MYSQL_ROOT_PASSWORD" ]
+      timeout: 10s
+      retries: 10
+      start_period: 20s # MySQL 초기화에 필요한 충분한 시간 (20초)
+
+volumes:
+  mysql_data:
