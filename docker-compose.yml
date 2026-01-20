@@ -3,19 +3,79 @@
 version: '3.8'
 services:
   # 1. Spring Boot 애플리케이션 서비스 (app)
-  app:
+  app1:
     build: .                 # 현재 디렉토리의 Dockerfile을 사용해 이미지 빌드
-    container_name: my-spring-app
+    container_name: my-spring-app-1
     ports:
-      - "8080:8080"          # Windows 호스트 포트 -> 컨테이너 포트 연결
+      - "8081:8080"          # Windows 호스트 포트 -> 컨테이너 포트 연결
     depends_on:
       db:
         condition: service_healthy # DB가 먼저 시작되기를 기다립니다.
+      mosquitto: #브로커가 뜬 후 실행되도록 설정
+        condition: service_healthy
     environment:
       # 🚨 application.yml의 ${} 변수에 주입할 실제 값
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/university?useUnicode=true&characterEncoding=utf8  # 'db'는 MySQL 서비스 이름
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: aa456456!
+      SPRING_DATASOURCE_USERNAME: ${MY_SQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      # MQTT 설정 : 컨테이너 간 통신이므로 서비스 이름(mosquitto)을 사용합니다
+      MQTT_BROKER_URL: tcp://mosquitto:1883
+  # 같은 서비스 두번째
+  app2:
+    build: .
+    container_name: my-spring-app-2
+    ports:
+      - "8082:8080" # 8082로 들어오면 컨테이너의 8080으로
+    depends_on:
+      db:
+        condition: service_healthy
+      mosquitto: #브로커가 뜬 후 실행되도록 설정
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/university?useUnicode=true&characterEncoding=utf8
+      SPRING_DATASOURCE_USERNAME: ${MY_SQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      # MQTT 설정 : 컨테이너 간 통신이므로 서비스 이름(mosquitto)을 사용합니다
+      MQTT_BROKER_URL: tcp://mosquitto:1883
+  # 같은 서비스 세번째
+  app3:
+    build: .
+    container_name: my-spring-app-3
+    ports:
+      - "8083:8080" # 8083로 들어오면 컨테이너의 8080으로
+    depends_on:
+      db:
+        condition: service_healthy
+      mosquitto: #브로커가 뜬 후 실행되도록 설정
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/university?useUnicode=true&characterEncoding=utf8
+      SPRING_DATASOURCE_USERNAME: ${MY_SQL_USER}
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      SPRING_DATA_REDIS_HOST: redis
+      SPRING_DATA_REDIS_PORT: 6379
+      # MQTT 설정 : 컨테이너 간 통신이므로 서비스 이름(mosquitto)을 사용합니다
+      MQTT_BROKER_URL: tcp://mosquitto:1883
+
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    container_name: mosquitto_broker
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ./mosquitto/data:/mosquitto/data
+      - ./mosquitto/log:/mosquitto/log
+    healthcheck:
+      test: ["CMD", "mosquitto_sub", "-t", "$$SYS/#", "-C", "1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   # 2. MySQL 데이터베이스 서비스 (db)
   db:
@@ -26,8 +86,8 @@ services:
     environment:
       MYSQL_DATABASE: university
       #MYSQL_USER: root
-      #MYSQL_PASSWORD: aa456456!
-      MYSQL_ROOT_PASSWORD: aa456456!
+      #MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     # 컨테이너 삭제 시에도 데이터 유실 방지를 위한 볼륨 설정
     volumes:
       - mysql_data:/var/lib/mysql
@@ -36,6 +96,34 @@ services:
       timeout: 10s
       retries: 10
       start_period: 20s # MySQL 초기화에 필요한 충분한 시간 (20초)
-
+  redis:
+    image: redis:alpine
+    container_name: redis-cache
+    ports:
+      - "6379:6379"
+    # 1. 데이터를 저장할 공간 연결 (볼륨 설정)
+    volumes:
+      - ./redis_data:/data
+    # 2. 데이터 보존 방식 변경 (AOF 모드 활성화)
+    command: redis-server --appendonly yes --dir /data
+    networks:
+      - default
+  nginx:
+    image: nginx:latest
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ../images:/usr/share/nginx/html/images
+    depends_on:
+      - app1
+      - app2
+      - app3
+  redis-insight:
+    image: redislabs/redisinsight:latest
+    container_name: redis-insight
+    ports:
+      - "5540:5540"
 volumes:
   mysql_data:

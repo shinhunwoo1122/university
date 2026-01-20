@@ -43,6 +43,18 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // Redis 사용을 위한 의존성
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    // 세션을 Redis에 저장하고 싶다면 추가
+    implementation 'org.springframework.session:spring-session-data-redis'
+    // WebSocket 및 STOMP 메시징을 위한 스타터 추가
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
+    //mqtt
+    implementation 'org.springframework.boot:spring-boot-starter-integration' // 추가 권장
+    implementation 'org.springframework.integration:spring-integration-mqtt'
+
 }
 
 // 3. Q-클래스 생성 경로 설정 (선택 사항, 보통 build/generated/querydsl에 생성됨)

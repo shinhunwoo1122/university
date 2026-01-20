@@ -104,8 +104,17 @@ public class StudentController {
         return ResponseEntity.ok(new CommonResponse<>(MetaData.builder().result(true).code("200").message("조회 완료").build(), stuents));
     }
 
+    @GetMapping("/test")
+    public ResponseEntity<String> test1(){
 
 
+        return ResponseEntity.ok("테스트임");
+    }
 
+    @GetMapping("/test2")
+    public ResponseEntity<String> test2(){
+
+        return ResponseEntity.ok("테스트222 실시간");
+    }
 
 }
